@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { scanConfig, type ScanResult, type ConfigType, type Issue, generateBestPractices } from '@/lib/scanner'
-import { X402Checkout } from '@/components/x402'
+import { PaymentOptions } from '@/components/stripe/PaymentOptions'
 
 // ── Example CLAUDE.md for "Try with example" ─────────────────────────
 
@@ -459,23 +459,19 @@ export default function Home() {
                         Get all {result.totalIssues} issues with detailed fixes,<br />
                         best practices checklist, and remediation steps.
                       </p>
-                      <X402Checkout
-                        endpoint="/api/full-report"
-                        method="POST"
-                        body={{ issues: result.issues, grade: result.grade, score: result.score }}
-                        productName="AgentAudit Full Report"
-                        price="$47"
-                        description="Complete security audit with all issues, fixes, and best practices"
-                        onSuccess={handleFullReportSuccess}
-                        accentColor="#f43f5e"
-                      >
-                        <span className="inline-flex items-center gap-2 rounded-xl bg-accent px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-accent/90">
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                          </svg>
-                          Unlock Full Report -- $47
-                        </span>
-                      </X402Checkout>
+                      <div className="w-full max-w-xs mx-auto">
+                        <PaymentOptions
+                          productName="AgentAudit Full Report"
+                          price={47}
+                          description="Complete security audit with all issues, fixes, and best practices"
+                          x402Endpoint="/api/full-report"
+                          x402Method="POST"
+                          x402Body={{ issues: result.issues, grade: result.grade, score: result.score }}
+                          successUrl="/success"
+                          onX402Success={handleFullReportSuccess}
+                          accentColor="#f43f5e"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -701,7 +697,7 @@ export default function Home() {
               AgentAudit
             </div>
             <div className="flex items-center gap-6 text-xs text-muted">
-              <span>Payments via x402 on Base</span>
+              <span>Payments via Stripe + x402</span>
               <span>|</span>
               <span>Client-side analysis only</span>
             </div>

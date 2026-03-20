@@ -10,6 +10,7 @@ import { EcosystemFooter } from '@/components/EcosystemFooter'
 import { SplitText } from '@/components/SplitText'
 import { MagneticButton } from '@/components/MagneticButton'
 import { TestimonialCarousel } from '@/components/TestimonialCarousel'
+import { FAQAccordion } from '@/components/FAQAccordion'
 
 // ── Example CLAUDE.md for "Try with example" ─────────────────────────
 
@@ -717,6 +718,23 @@ export default function Home() {
             buttonText="Subscribe Free"
             accent="rose"
           />
+        </div>
+      </section>
+
+      {/* ── FAQ ─────────────────────────────────────────────── */}
+      <section className="border-b border-card-border">
+        <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-20">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">Frequently Asked Questions</h2>
+          </div>
+          <FAQAccordion items={[
+            { question: "What configs does AgentAudit scan?", answer: "AgentAudit scans CLAUDE.md files, .cursorrules, .windsurfrules, MCP server configurations, and any AI agent config that defines permissions, tool access, or shell commands." },
+            { question: "Is my config data sent to a server?", answer: "No. All scanning runs entirely in your browser using client-side JavaScript. Your configuration never leaves your machine. We have zero visibility into what you scan." },
+            { question: "What security issues does it detect?", answer: "We check 8 categories: shell access permissions (rm -rf, sudo), file system scope, MCP server trust, secret exposure (API keys, tokens), rate limiting, network access, tool restrictions, and audit logging." },
+            { question: "What's the difference between Free and Full Report?", answer: "The free scan gives you a risk score (A-F) and your top 3 issues with fixes. The full report ($47) unlocks all issues, complete remediation steps, and a best practices checklist." },
+            { question: "How is payment handled?", answer: "Payment is processed via USDC on Base network. You send the exact amount, paste your transaction hash, and we verify it on-chain before unlocking the full report. Stripe card payments coming soon." },
+            { question: "Can I use this for my team?", answer: "Yes. Each scan is independent — share the URL with your team and everyone can run their own scans for free. The full report purchase is per-scan." },
+          ]} />
         </div>
       </section>
 

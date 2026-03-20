@@ -1,26 +1,98 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #06080d;
+  --foreground: #e2e8f0;
+  --accent: #f43f5e;
+  --accent-soft: #f43f5e22;
+  --card: #0d1117;
+  --card-border: #1e293b;
+  --muted: #64748b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-card: var(--card);
+  --color-card-border: var(--card-border);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-jetbrains);
+  --font-mono: var(--font-jetbrains);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Scanline animation for the hero */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+.scanline {
+  animation: scanline 3s linear infinite;
+}
+
+/* Pulse glow for scan button */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(244, 63, 94, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(244, 63, 94, 0.6); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Grade colors */
+.grade-A { color: #10b981; background: #10b98120; border-color: #10b98140; }
+.grade-B { color: #22d3ee; background: #22d3ee20; border-color: #22d3ee40; }
+.grade-C { color: #f59e0b; background: #f59e0b20; border-color: #f59e0b40; }
+.grade-D { color: #f97316; background: #f9731620; border-color: #f9731640; }
+.grade-F { color: #ef4444; background: #ef444420; border-color: #ef444440; }
+
+/* Severity badges */
+.severity-critical { color: #ef4444; background: #ef444415; border: 1px solid #ef444430; }
+.severity-high { color: #f97316; background: #f9731615; border: 1px solid #f9731630; }
+.severity-medium { color: #f59e0b; background: #f59e0b15; border: 1px solid #f59e0b30; }
+.severity-low { color: #22d3ee; background: #22d3ee15; border: 1px solid #22d3ee30; }
+
+/* Blur overlay for locked content */
+.blur-locked {
+  filter: blur(6px);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Terminal cursor blink */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
 }

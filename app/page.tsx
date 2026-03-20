@@ -1,65 +1,648 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { scanConfig, type ScanResult, type ConfigType, type Issue, generateBestPractices } from '@/lib/scanner'
+import { X402Checkout } from '@/components/x402'
+
+// ── Security category grid items ─────────────────────────────────────
+
+const CATEGORIES = [
+  {
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    title: 'Shell Access Permissions',
+    desc: 'rm -rf, sudo, chmod 777, eval, pipe-to-shell',
+  },
+  {
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      </svg>
+    ),
+    title: 'File System Scope',
+    desc: 'Root access, home dir exposure, sensitive paths',
+  },
+  {
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+      </svg>
+    ),
+    title: 'MCP Server Trust',
+    desc: 'Exec servers, filesystem access, browser automation',
+  },
+  {
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+      </svg>
+    ),
+    title: 'Secret Exposure',
+    desc: 'API keys, tokens, passwords, AWS credentials',
+  },
+  {
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    title: 'Rate Limiting',
+    desc: 'Usage caps, cost guards, request throttling',
+  },
+  {
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+      </svg>
+    ),
+    title: 'Network Access',
+    desc: 'Unrestricted fetch, tunnels, webhook exposure',
+  },
+  {
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+    ),
+    title: 'Tool Restrictions',
+    desc: 'Deny rules, safety guardrails, boundaries',
+  },
+  {
+    icon: (
+      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+      </svg>
+    ),
+    title: 'Audit Logging',
+    desc: 'Action tracking, monitoring, audit trails',
+  },
+]
+
+// ── Grade color helpers ──────────────────────────────────────────────
+
+function gradeColor(grade: string) {
+  switch (grade) {
+    case 'A': return { text: '#10b981', bg: '#10b98120', border: '#10b98140' }
+    case 'B': return { text: '#22d3ee', bg: '#22d3ee20', border: '#22d3ee40' }
+    case 'C': return { text: '#f59e0b', bg: '#f59e0b20', border: '#f59e0b40' }
+    case 'D': return { text: '#f97316', bg: '#f9731620', border: '#f9731640' }
+    case 'F': return { text: '#ef4444', bg: '#ef444420', border: '#ef444440' }
+    default: return { text: '#64748b', bg: '#64748b20', border: '#64748b40' }
+  }
+}
+
+function severityColor(severity: string) {
+  switch (severity) {
+    case 'critical': return '#ef4444'
+    case 'high': return '#f97316'
+    case 'medium': return '#f59e0b'
+    case 'low': return '#22d3ee'
+    default: return '#64748b'
+  }
+}
+
+// ── Issue Card ───────────────────────────────────────────────────────
+
+function IssueCard({ issue, index, locked }: { issue: Issue; index: number; locked: boolean }) {
+  const color = severityColor(issue.severity)
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.08 }}
+      className={`rounded-xl border border-card-border bg-card p-5 ${locked ? 'blur-locked' : ''}`}
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <span
+          className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider"
+          style={{ color, background: `${color}15`, border: `1px solid ${color}30` }}
+        >
+          {issue.severity}
+        </span>
+        <span className="text-xs text-muted">{issue.category}</span>
+      </div>
+      <h4 className="mb-2 text-sm font-bold text-white">{issue.title}</h4>
+      <p className="mb-3 text-xs leading-relaxed text-muted">{issue.description}</p>
+      {issue.snippet && (
+        <div className="mb-3 rounded-lg bg-background p-3 font-mono text-xs text-red-400/80">
+          {issue.snippet}
+        </div>
+      )}
+      <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-400">Fix</div>
+        <p className="text-xs leading-relaxed text-emerald-300/80">{issue.fix}</p>
+      </div>
+    </motion.div>
+  )
+}
+
+// ── Main Page ────────────────────────────────────────────────────────
 
 export default function Home() {
+  const [config, setConfig] = useState('')
+  const [scanning, setScanning] = useState(false)
+  const [result, setResult] = useState<ScanResult | null>(null)
+  const [fullReport, setFullReport] = useState(false)
+  const resultsRef = useRef<HTMLDivElement>(null)
+
+  const handleScan = () => {
+    if (!config.trim()) return
+    setScanning(true)
+    setResult(null)
+    setFullReport(false)
+
+    // Simulate scan delay for dramatic effect
+    setTimeout(() => {
+      const scanResult = scanConfig(config)
+      setResult(scanResult)
+      setScanning(false)
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
+    }, 1500)
+  }
+
+  const handleFullReportSuccess = () => {
+    setFullReport(true)
+  }
+
+  const freeIssues = result?.issues.slice(0, 3) ?? []
+  const lockedIssues = result?.issues.slice(3) ?? []
+  const practices = result ? generateBestPractices(config) : []
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="min-h-screen">
+      {/* ── Hero ────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden border-b border-card-border">
+        {/* Background grid */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(244,63,94,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.3) 1px, transparent 1px)`,
+            backgroundSize: '40px 40px',
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <div className="relative mx-auto max-w-5xl px-6 pb-20 pt-24 text-center">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent-soft px-4 py-1.5 text-xs font-medium text-accent"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+            </span>
+            Security Scanner for AI Agent Configs
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mx-auto mb-6 max-w-4xl text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl"
+          >
+            Your AI agent has more access than your junior dev.{' '}
+            <span className="text-accent">Have you audited it?</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-muted sm:text-lg"
+          >
+            Scan CLAUDE.md, .cursorrules, MCP configs for security vulnerabilities in 10 seconds.
+          </motion.p>
+
+          {/* Quick stats */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mx-auto mb-12 flex max-w-md items-center justify-center gap-8 text-xs text-muted"
+          >
+            <div className="flex items-center gap-2">
+              <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              20+ vulnerability patterns
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Client-side analysis
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              Your config never leaves your browser
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Scanner Section ─────────────────────────────────────── */}
+      <section className="relative border-b border-card-border bg-card/30">
+        <div className="mx-auto max-w-3xl px-6 py-16">
+          <div className="rounded-2xl border border-card-border bg-card p-6 shadow-2xl shadow-black/40">
+            {/* Terminal header */}
+            <div className="mb-4 flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-red-500/70" />
+              <div className="h-3 w-3 rounded-full bg-yellow-500/70" />
+              <div className="h-3 w-3 rounded-full bg-green-500/70" />
+              <span className="ml-3 text-xs text-muted">paste your config below</span>
+            </div>
+
+            {/* Textarea */}
+            <textarea
+              value={config}
+              onChange={(e) => setConfig(e.target.value)}
+              placeholder={`# Paste your CLAUDE.md, .cursorrules, or MCP config here...\n\n# Example:\n{\n  "mcpServers": {\n    "filesystem": {\n      "command": "npx",\n      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/"]\n    }\n  }\n}`}
+              className="mb-4 h-64 w-full resize-none rounded-xl border border-card-border bg-background p-4 font-mono text-sm text-foreground placeholder:text-muted/40 focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/20"
+              spellCheck={false}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+            {/* Scan button */}
+            <button
+              onClick={handleScan}
+              disabled={!config.trim() || scanning}
+              className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-all ${
+                scanning
+                  ? 'bg-accent/60 cursor-wait'
+                  : config.trim()
+                    ? 'bg-accent hover:bg-accent/90 pulse-glow cursor-pointer'
+                    : 'bg-card-border cursor-not-allowed text-muted'
+              }`}
+            >
+              {scanning ? (
+                <span className="flex items-center justify-center gap-3">
+                  <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Scanning for vulnerabilities...
+                </span>
+              ) : (
+                'Scan Now -- Free'
+              )}
+            </button>
+
+            <p className="mt-3 text-center text-[10px] text-muted">
+              Analysis runs entirely in your browser. No data is sent to any server.
+            </p>
+          </div>
         </div>
-      </main>
-    </div>
-  );
+      </section>
+
+      {/* ── Results Section ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {result && (
+          <motion.section
+            ref={resultsRef}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="border-b border-card-border"
+          >
+            <div className="mx-auto max-w-4xl px-6 py-16">
+              {/* Risk Score Header */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="mb-12 text-center"
+              >
+                <div className="mb-6 inline-flex flex-col items-center">
+                  <div
+                    className="mb-4 flex h-28 w-28 items-center justify-center rounded-2xl border-2 text-5xl font-black"
+                    style={{
+                      color: gradeColor(result.grade).text,
+                      backgroundColor: gradeColor(result.grade).bg,
+                      borderColor: gradeColor(result.grade).border,
+                    }}
+                  >
+                    {result.grade}
+                  </div>
+                  <div className="text-sm text-muted">
+                    Security Score: <span className="font-bold text-white">{result.score}/100</span>
+                  </div>
+                  <div className="mt-1 text-xs text-muted">
+                    Config type: <span className="capitalize text-foreground">{result.configType}</span>
+                    {' | '}
+                    {result.totalIssues} issue{result.totalIssues !== 1 ? 's' : ''} found
+                  </div>
+                </div>
+                <p className="mx-auto max-w-xl text-sm leading-relaxed text-muted">{result.summary}</p>
+              </motion.div>
+
+              {/* Free Issues (top 3) */}
+              {freeIssues.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted">
+                    <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    Top Issues Found (Free)
+                  </h3>
+                  <div className="space-y-4">
+                    {freeIssues.map((issue, i) => (
+                      <IssueCard key={issue.id} issue={issue} index={i} locked={false} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Locked Issues */}
+              {lockedIssues.length > 0 && !fullReport && (
+                <div className="relative mb-8">
+                  <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted">
+                    <svg className="h-4 w-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    {lockedIssues.length} More Issue{lockedIssues.length !== 1 ? 's' : ''} Found
+                  </h3>
+
+                  {/* Preview of locked issues (blurred) */}
+                  <div className="space-y-4">
+                    {lockedIssues.slice(0, 2).map((issue, i) => (
+                      <IssueCard key={issue.id} issue={issue} index={i} locked={true} />
+                    ))}
+                  </div>
+
+                  {/* Unlock CTA overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="rounded-2xl border border-card-border bg-card/95 p-8 text-center shadow-2xl backdrop-blur-sm">
+                      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-accent-soft">
+                        <svg className="h-7 w-7 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                      </div>
+                      <h4 className="mb-2 text-lg font-bold text-white">
+                        Unlock Full Report
+                      </h4>
+                      <p className="mb-6 text-sm text-muted">
+                        Get all {result.totalIssues} issues with detailed fixes,<br />
+                        best practices checklist, and remediation steps.
+                      </p>
+                      <X402Checkout
+                        endpoint="/api/full-report"
+                        method="POST"
+                        body={{ issues: result.issues, grade: result.grade, score: result.score }}
+                        productName="AgentAudit Full Report"
+                        price="$47"
+                        description="Complete security audit with all issues, fixes, and best practices"
+                        onSuccess={handleFullReportSuccess}
+                        accentColor="#f43f5e"
+                      >
+                        <span className="inline-flex items-center gap-2 rounded-xl bg-accent px-8 py-3.5 text-sm font-bold text-white transition-all hover:bg-accent/90">
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                          Unlock Full Report -- $47
+                        </span>
+                      </X402Checkout>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Unlocked full issues */}
+              {fullReport && lockedIssues.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-emerald-400">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                    </svg>
+                    All Issues -- Full Report
+                  </h3>
+                  <div className="space-y-4">
+                    {lockedIssues.map((issue, i) => (
+                      <IssueCard key={issue.id} issue={issue} index={i} locked={false} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Best Practices Checklist (full report only) */}
+              {fullReport && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-8"
+                >
+                  <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted">
+                    <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    Best Practices Checklist
+                  </h3>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {practices.map((p, i) => (
+                      <div
+                        key={i}
+                        className={`rounded-xl border p-4 ${
+                          p.passed
+                            ? 'border-emerald-500/20 bg-emerald-500/5'
+                            : 'border-red-500/20 bg-red-500/5'
+                        }`}
+                      >
+                        <div className="mb-1 flex items-center gap-2">
+                          {p.passed ? (
+                            <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="h-4 w-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                          <span className="text-xs font-bold text-white">{p.title}</span>
+                        </div>
+                        <p className="text-xs text-muted">{p.description}</p>
+                        <span className="mt-1 inline-block text-[10px] text-muted/60">{p.category}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
+      {/* ── What We Check ───────────────────────────────────────── */}
+      <section className="border-b border-card-border">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <div className="mb-12 text-center">
+            <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">What We Check</h2>
+            <p className="text-sm text-muted">
+              8 security categories, 20+ vulnerability patterns, zero data leaves your browser.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {CATEGORIES.map((cat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+                className="group rounded-xl border border-card-border bg-card p-5 transition-all hover:border-accent/30 hover:bg-accent-soft"
+              >
+                <div className="mb-3 text-muted transition-colors group-hover:text-accent">
+                  {cat.icon}
+                </div>
+                <h3 className="mb-1 text-sm font-bold text-white">{cat.title}</h3>
+                <p className="text-xs leading-relaxed text-muted">{cat.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pricing ─────────────────────────────────────────────── */}
+      <section className="border-b border-card-border">
+        <div className="mx-auto max-w-4xl px-6 py-20">
+          <div className="mb-12 text-center">
+            <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">Simple Pricing</h2>
+            <p className="text-sm text-muted">
+              Free scan to see your risk level. Full report for complete remediation.
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            {/* Free tier */}
+            <div className="rounded-2xl border border-card-border bg-card p-8">
+              <div className="mb-6">
+                <h3 className="mb-1 text-lg font-bold text-white">Free Scan</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black text-white">$0</span>
+                </div>
+              </div>
+              <ul className="mb-8 space-y-3 text-sm text-muted">
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Risk score (A-F grade)
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Top 3 issues with fixes
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Config type auto-detection
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span className="text-muted/60">All issues + remediation</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span className="text-muted/60">Best practices checklist</span>
+                </li>
+              </ul>
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault()
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                className="block w-full rounded-xl border border-card-border py-3 text-center text-sm font-bold text-white transition-colors hover:border-accent/40 hover:bg-accent-soft"
+              >
+                Start Free Scan
+              </a>
+            </div>
+
+            {/* Full report */}
+            <div className="relative rounded-2xl border-2 border-accent/40 bg-card p-8">
+              <div className="absolute -top-3 left-6 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-white">
+                RECOMMENDED
+              </div>
+              <div className="mb-6">
+                <h3 className="mb-1 text-lg font-bold text-white">Full Report</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black text-white">$47</span>
+                  <span className="text-sm text-muted">one-time</span>
+                </div>
+              </div>
+              <ul className="mb-8 space-y-3 text-sm text-muted">
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Everything in Free
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  All issues with detailed fixes
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Complete remediation steps
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Best practices checklist (10 checks)
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Priority-ranked action plan
+                </li>
+              </ul>
+              <div className="block w-full rounded-xl bg-accent py-3 text-center text-sm font-bold text-white transition-all hover:bg-accent/90">
+                Scan First, Then Unlock
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Footer ──────────────────────────────────────────────── */}
+      <footer className="border-t border-card-border bg-card/30">
+        <div className="mx-auto max-w-5xl px-6 py-10">
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="flex items-center gap-2 text-sm font-bold text-white">
+              <svg className="h-5 w-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              AgentAudit
+            </div>
+            <div className="flex items-center gap-6 text-xs text-muted">
+              <span>Payments via x402 on Base</span>
+              <span>|</span>
+              <span>Client-side analysis only</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </main>
+  )
 }

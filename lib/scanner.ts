@@ -169,6 +169,24 @@ const SECRET_PATTERNS: Pattern[] = [
     regex: /(?:password|passwd|passphrase)\s*[:=]\s*["'][^"']{4,}["']/gi,
     fix: 'Remove passwords from config. Use environment variables or a secrets manager.',
   },
+  {
+    id: 'secret-openai-key',
+    category: 'Secret Exposure',
+    title: 'OpenAI API key detected',
+    description: 'Config contains an OpenAI API key (sk-proj- or sk- prefix). This key grants access to paid AI API usage.',
+    severity: 'critical',
+    regex: /sk-proj-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{20,}/gi,
+    fix: 'Remove the API key. Use `$OPENAI_API_KEY` environment variable instead of hardcoding the key.',
+  },
+  {
+    id: 'secret-github-token',
+    category: 'Secret Exposure',
+    title: 'GitHub personal access token detected',
+    description: 'Config contains a GitHub token (ghp_ or ghs_ prefix). This could be used to access or modify repositories.',
+    severity: 'critical',
+    regex: /gh[ps]_[A-Za-z0-9]{36,}/gi,
+    fix: 'Remove the token. Use fine-grained tokens with minimal scopes, stored in environment variables.',
+  },
 ]
 
 const MCP_PATTERNS: Pattern[] = [
@@ -240,6 +258,27 @@ const SAFETY_PATTERNS: Pattern[] = [
   },
 ]
 
+const PERMISSION_PATTERNS: Pattern[] = [
+  {
+    id: 'perm-any-command',
+    category: 'Shell Access',
+    title: 'Unrestricted command execution granted',
+    description: 'Config explicitly grants the agent permission to run "any" command. This is equivalent to giving it root shell access.',
+    severity: 'critical',
+    regex: /(?:run|execute|use)\s+any\s+(?:bash\s+)?command|any\s+command\s+needed|full\s+shell\s+access/gi,
+    fix: 'Replace "any command" with an explicit allowlist of safe commands the agent actually needs.',
+  },
+  {
+    id: 'perm-full-access',
+    category: 'File System',
+    title: 'Full or unrestricted access granted',
+    description: 'Config explicitly grants "full access" to the system or filesystem without scoping.',
+    severity: 'high',
+    regex: /full\s+access|unrestricted\s+access|access\s+to\s+(?:the\s+)?entire|access\s+to\s+everything/gi,
+    fix: 'Scope access to the specific project directory. Never grant blanket "full access" permissions.',
+  },
+]
+
 const NETWORK_PATTERNS: Pattern[] = [
   {
     id: 'net-unrestricted',
@@ -290,6 +329,7 @@ const ALL_PATTERNS = [
   ...FILESYSTEM_PATTERNS,
   ...SECRET_PATTERNS,
   ...MCP_PATTERNS,
+  ...PERMISSION_PATTERNS,
   ...NETWORK_PATTERNS,
 ]
 

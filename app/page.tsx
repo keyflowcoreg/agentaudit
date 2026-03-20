@@ -5,6 +5,60 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { scanConfig, type ScanResult, type ConfigType, type Issue, generateBestPractices } from '@/lib/scanner'
 import { X402Checkout } from '@/components/x402'
 
+// ── Example CLAUDE.md for "Try with example" ─────────────────────────
+
+const EXAMPLE_CONFIG = `# CLAUDE.md
+
+## Project
+You are a full-stack AI coding assistant for the Acme SaaS platform.
+
+## Allowed Commands
+You can run any bash command needed to complete tasks:
+- Use sudo when needed for system-level changes
+- rm -rf node_modules to clean up when builds fail
+- chmod 777 on build artifacts for CI/CD compatibility
+- curl https://scripts.company.io/setup.sh | bash for environment setup
+
+## File Access
+You have access to the entire home directory: ~/\*\*
+You may also read configs from /etc/ and /var/log/ when debugging.
+
+## MCP Servers
+\`\`\`json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/"]
+    },
+    "shell": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-exec"]
+    },
+    "browser": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8"
+      }
+    }
+  }
+}
+\`\`\`
+
+## Database
+api_key: sk-proj-abc123def456ghi789jkl012mno345pqr678stu901vwx
+password: "SuperSecret123!"
+
+## Networking
+The agent can fetch any URL. We use ngrok for local testing webhooks.
+allowedDomains: *
+`
+
 // ── Security category grid items ─────────────────────────────────────
 
 const CATEGORIES = [
@@ -188,7 +242,7 @@ export default function Home() {
           }}
         />
 
-        <div className="relative mx-auto max-w-5xl px-6 pb-20 pt-24 text-center">
+        <div className="relative mx-auto max-w-5xl px-4 pb-16 pt-16 text-center sm:px-6 sm:pb-20 sm:pt-24">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -216,7 +270,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-muted sm:text-lg"
+            className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-zinc-300 sm:text-lg"
           >
             Scan CLAUDE.md, .cursorrules, MCP configs for security vulnerabilities in 10 seconds.
           </motion.p>
@@ -226,7 +280,7 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="mx-auto mb-12 flex max-w-md items-center justify-center gap-8 text-xs text-muted"
+            className="mx-auto mb-12 flex max-w-lg flex-col items-center justify-center gap-3 text-xs text-muted sm:flex-row sm:gap-8"
           >
             <div className="flex items-center gap-2">
               <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,8 +306,8 @@ export default function Home() {
 
       {/* ── Scanner Section ─────────────────────────────────────── */}
       <section className="relative border-b border-card-border bg-card/30">
-        <div className="mx-auto max-w-3xl px-6 py-16">
-          <div className="rounded-2xl border border-card-border bg-card p-6 shadow-2xl shadow-black/40">
+        <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
+          <div className="rounded-2xl border border-card-border bg-card p-4 shadow-2xl shadow-black/40 sm:p-6">
             {/* Terminal header */}
             <div className="mb-4 flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-red-500/70" />
@@ -271,30 +325,42 @@ export default function Home() {
               spellCheck={false}
             />
 
-            {/* Scan button */}
-            <button
-              onClick={handleScan}
-              disabled={!config.trim() || scanning}
-              className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-all ${
-                scanning
-                  ? 'bg-accent/60 cursor-wait'
-                  : config.trim()
-                    ? 'bg-accent hover:bg-accent/90 pulse-glow cursor-pointer'
-                    : 'bg-card-border cursor-not-allowed text-muted'
-              }`}
-            >
-              {scanning ? (
-                <span className="flex items-center justify-center gap-3">
-                  <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Scanning for vulnerabilities...
-                </span>
-              ) : (
-                'Scan Now -- Free'
-              )}
-            </button>
+            {/* Action buttons */}
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                onClick={handleScan}
+                disabled={!config.trim() || scanning}
+                className={`flex-1 rounded-xl py-4 text-sm font-bold text-white transition-all ${
+                  scanning
+                    ? 'bg-accent/60 cursor-wait'
+                    : config.trim()
+                      ? 'bg-accent hover:bg-accent/90 pulse-glow cursor-pointer'
+                      : 'bg-card-border cursor-not-allowed text-muted'
+                }`}
+              >
+                {scanning ? (
+                  <span className="flex items-center justify-center gap-3">
+                    <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Scanning for vulnerabilities...
+                  </span>
+                ) : (
+                  'Scan Now -- Free'
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setConfig(EXAMPLE_CONFIG)
+                  setResult(null)
+                  setFullReport(false)
+                }}
+                className="rounded-xl border border-card-border px-6 py-4 text-sm font-bold text-muted transition-all hover:border-accent/40 hover:text-white sm:flex-none cursor-pointer"
+              >
+                Try with example
+              </button>
+            </div>
 
             <p className="mt-3 text-center text-[10px] text-muted">
               Analysis runs entirely in your browser. No data is sent to any server.
@@ -313,7 +379,7 @@ export default function Home() {
             exit={{ opacity: 0 }}
             className="border-b border-card-border"
           >
-            <div className="mx-auto max-w-4xl px-6 py-16">
+            <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-16">
               {/* Risk Score Header */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -323,7 +389,7 @@ export default function Home() {
               >
                 <div className="mb-6 inline-flex flex-col items-center">
                   <div
-                    className="mb-4 flex h-28 w-28 items-center justify-center rounded-2xl border-2 text-5xl font-black"
+                    className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl border-2 text-4xl font-black sm:h-28 sm:w-28 sm:text-5xl"
                     style={{
                       color: gradeColor(result.grade).text,
                       backgroundColor: gradeColor(result.grade).bg,
@@ -445,7 +511,7 @@ export default function Home() {
                     </svg>
                     Best Practices Checklist
                   </h3>
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {practices.map((p, i) => (
                       <div
                         key={i}
@@ -481,7 +547,7 @@ export default function Home() {
 
       {/* ── What We Check ───────────────────────────────────────── */}
       <section className="border-b border-card-border">
-        <div className="mx-auto max-w-5xl px-6 py-20">
+        <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-20">
           <div className="mb-12 text-center">
             <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">What We Check</h2>
             <p className="text-sm text-muted">
@@ -489,15 +555,14 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {CATEGORIES.map((cat, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.06 }}
-                className="group rounded-xl border border-card-border bg-card p-5 transition-all hover:border-accent/30 hover:bg-accent-soft"
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + i * 0.06 }}
+                className="group rounded-xl border border-card-border bg-card p-5 transition-all hover:border-red-500/50 hover:bg-accent-soft"
               >
                 <div className="mb-3 text-muted transition-colors group-hover:text-accent">
                   {cat.icon}
@@ -512,7 +577,7 @@ export default function Home() {
 
       {/* ── Pricing ─────────────────────────────────────────────── */}
       <section className="border-b border-card-border">
-        <div className="mx-auto max-w-4xl px-6 py-20">
+        <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20">
           <div className="mb-12 text-center">
             <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">Simple Pricing</h2>
             <p className="text-sm text-muted">
@@ -520,7 +585,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {/* Free tier */}
             <div className="rounded-2xl border border-card-border bg-card p-8">
               <div className="mb-6">
@@ -627,7 +692,7 @@ export default function Home() {
 
       {/* ── Footer ──────────────────────────────────────────────── */}
       <footer className="border-t border-card-border bg-card/30">
-        <div className="mx-auto max-w-5xl px-6 py-10">
+        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2 text-sm font-bold text-white">
               <svg className="h-5 w-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">

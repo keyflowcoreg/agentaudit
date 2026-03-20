@@ -49,27 +49,19 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${jetbrains.variable} h-full antialiased dark`}>
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "SoftwareApplication",
-              name: "AgentAudit",
-              description:
-                "AI agent security scanner. Paste your CLAUDE.md, .cursorrules, or MCP config. Get a security risk score and actionable fixes.",
-              url: "https://agentaudit.dev",
-              applicationCategory: "SecurityApplication",
-              operatingSystem: "Web",
-              offers: {
-                "@type": "Offer",
-                price: "47",
-                priceCurrency: "USD",
-                availability: "https://schema.org/InStock",
-              },
-            }),
-          }}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "AgentAudit",
+          "description": "AI agent security scanner",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Web",
+          "offers": {
+            "@type": "Offer",
+            "price": "47",
+            "priceCurrency": "USD"
+          }
+        }) }} />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground font-mono">
         <Analytics product="agentaudit" />

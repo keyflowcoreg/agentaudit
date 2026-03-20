@@ -69,7 +69,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground font-mono">
         <NoiseOverlay />
-        <AnnouncementBar items={['LAUNCH WEEK \u2014 Limited time pricing', 'Scan your AI agent config free \u2014 Full report $47']} />
+        <AnnouncementBar items={['LAUNCH WEEK \u2014 Limited time pricing', 'Scan your AI agent config free \u2014 Full report $47']} className="bg-rose-950/60 text-rose-300 border-b border-rose-500/20" />
         <Analytics product="agentaudit" />
         {children}
         <CookieBanner />

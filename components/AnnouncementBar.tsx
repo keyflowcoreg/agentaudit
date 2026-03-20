@@ -24,7 +24,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({
 
   return (
     <div
-      className={`overflow-hidden py-2 relative z-50 ${className}`}
+      className={`overflow-hidden py-2 relative z-30 ${className}`}
     >
       <motion.div
         animate={{ x: ['0%', '-50%'] }}

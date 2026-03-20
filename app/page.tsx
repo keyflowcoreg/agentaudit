@@ -239,15 +239,14 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       {/* ── Hero ────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-card-border">
-        {/* Background grid */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(244,63,94,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(244,63,94,0.3) 1px, transparent 1px)`,
-            backgroundSize: '40px 40px',
-          }}
-        />
+      <section className="relative overflow-hidden border-b border-dashed border-rose-500/20">
+        {/* Rose radial glow */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(244,63,94,0.08)_0%,_transparent_50%)]" />
+
+        {/* Security scanline effect */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="scanline absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-rose-500/40 to-transparent" />
+        </div>
 
         <div className="relative mx-auto max-w-5xl px-4 pb-16 pt-16 text-center sm:px-6 sm:pb-20 sm:pt-24">
           {/* Badge */}
@@ -314,7 +313,7 @@ export default function Home() {
       </section>
 
       {/* ── Scanner Section ─────────────────────────────────────── */}
-      <section className="relative border-b border-card-border bg-card/30">
+      <section className="relative border-b border-dashed border-rose-500/20 bg-card/30">
         <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
           <div className="rounded-2xl border border-card-border bg-card p-4 shadow-2xl shadow-black/40 sm:p-6">
             {/* Terminal header */}
@@ -388,7 +387,7 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="border-b border-card-border"
+            className="border-b border-dashed border-rose-500/20"
           >
             <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-16">
               {/* Risk Score Header */}
@@ -565,7 +564,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* ── What We Check ───────────────────────────────────────── */}
-      <section className="border-b border-card-border">
+      <section className="border-b border-dashed border-rose-500/20">
         <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-20">
           <div className="mb-12 text-center">
             <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">What We Check</h2>
@@ -595,7 +594,7 @@ export default function Home() {
       </section>
 
       {/* ── Pricing ─────────────────────────────────────────────── */}
-      <section className="border-b border-card-border">
+      <section className="border-b border-dashed border-rose-500/20">
         <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20">
           <div className="mb-12 text-center">
             <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">Simple Pricing</h2>
@@ -710,7 +709,7 @@ export default function Home() {
       </section>
 
       {/* ── Email Capture ────────────────────────────────────────── */}
-      <section className="border-b border-card-border">
+      <section className="border-b border-dashed border-rose-500/20">
         <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
           <EmailCapture
             heading="Get security tips for your AI agents"
@@ -722,7 +721,7 @@ export default function Home() {
       </section>
 
       {/* ── FAQ ─────────────────────────────────────────────── */}
-      <section className="border-b border-card-border">
+      <section className="border-b border-dashed border-rose-500/20">
         <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-20">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">Frequently Asked Questions</h2>
@@ -739,7 +738,7 @@ export default function Home() {
       </section>
 
       {/* ── Testimonials ──────────────────────────────────────── */}
-      <section className="border-b border-card-border">
+      <section className="border-b border-dashed border-rose-500/20">
         <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">What security engineers are saying</h2>

@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { scanConfig, type ScanResult, type ConfigType, type Issue, generateBestPractices } from '@/lib/scanner'
-import { PaymentOptions } from '@/components/stripe/PaymentOptions'
+import { PayNow } from '@/components/paynow'
 
 // ── Example CLAUDE.md for "Try with example" ─────────────────────────
 
@@ -460,15 +460,11 @@ export default function Home() {
                         best practices checklist, and remediation steps.
                       </p>
                       <div className="w-full max-w-xs mx-auto">
-                        <PaymentOptions
+                        <PayNow
                           productName="AgentAudit Full Report"
                           price={47}
                           description="Complete security audit with all issues, fixes, and best practices"
-                          x402Endpoint="/api/full-report"
-                          x402Method="POST"
-                          x402Body={{ issues: result.issues, grade: result.grade, score: result.score }}
-                          successUrl="/success"
-                          onX402Success={handleFullReportSuccess}
+                          onSuccess={handleFullReportSuccess}
                           accentColor="#f43f5e"
                         />
                       </div>
@@ -697,7 +693,7 @@ export default function Home() {
               AgentAudit
             </div>
             <div className="flex items-center gap-6 text-xs text-muted">
-              <span>Payments via Stripe + x402</span>
+              <span>Card, Apple Pay, USDC accepted</span>
               <span>|</span>
               <span>Client-side analysis only</span>
             </div>

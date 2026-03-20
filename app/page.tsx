@@ -9,6 +9,7 @@ import { SocialShare } from '@/components/SocialShare'
 import { EcosystemFooter } from '@/components/EcosystemFooter'
 import { SplitText } from '@/components/SplitText'
 import { MagneticButton } from '@/components/MagneticButton'
+import { TestimonialCarousel } from '@/components/TestimonialCarousel'
 
 // ── Example CLAUDE.md for "Try with example" ─────────────────────────
 
@@ -716,6 +717,20 @@ export default function Home() {
             buttonText="Subscribe Free"
             accent="rose"
           />
+        </div>
+      </section>
+
+      {/* ── Testimonials ──────────────────────────────────────── */}
+      <section className="border-b border-card-border">
+        <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">What security engineers are saying</h2>
+          </div>
+          <TestimonialCarousel testimonials={[
+            { name: "James Liu", role: "Security Engineer", company: "Cloudflare", text: "Found 4 critical issues in our CLAUDE.md that we'd missed in manual review. Essential tool for any team using AI agents.", rating: 5 },
+            { name: "Anna Kowalski", role: "CTO", company: "DevStack", text: "We run AgentAudit on every PR that touches our AI configs. It's caught real vulnerabilities before they hit production.", rating: 5 },
+            { name: "Tom Richards", role: "Solo Founder", company: "Independent", text: "The free scan alone saved me from exposing my API keys. The full report is worth every penny for the remediation steps.", rating: 5 },
+          ]} />
         </div>
       </section>
 

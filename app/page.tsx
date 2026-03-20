@@ -4,6 +4,8 @@ import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { scanConfig, type ScanResult, type ConfigType, type Issue, generateBestPractices } from '@/lib/scanner'
 import { PayNow } from '@/components/paynow'
+import EmailCapture from '@/components/EmailCapture'
+import { SocialShare } from '@/components/SocialShare'
 
 // ── Example CLAUDE.md for "Try with example" ─────────────────────────
 
@@ -532,6 +534,22 @@ export default function Home() {
                   </div>
                 </motion.div>
               )}
+
+              {/* Share your security score */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="rounded-xl border border-card-border bg-card p-5"
+              >
+                <h3 className="mb-3 text-sm font-bold text-white">Share your security score</h3>
+                <SocialShare
+                  url="https://agentaudit-five.vercel.app"
+                  title={`My AI agent config scored ${result.grade} (${result.score}/100) on AgentAudit security scan`}
+                  description="Scan your CLAUDE.md, .cursorrules, or MCP config for security vulnerabilities."
+                  hashtags={['AIAgentSecurity', 'AgentAudit']}
+                />
+              </motion.div>
             </div>
           </motion.section>
         )}
@@ -682,6 +700,18 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Email Capture ────────────────────────────────────────── */}
+      <section className="border-b border-card-border">
+        <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
+          <EmailCapture
+            heading="Get security tips for your AI agents"
+            description="Weekly insights on AI agent security best practices."
+            buttonText="Subscribe Free"
+            accent="rose"
+          />
+        </div>
+      </section>
+
       {/* ── Footer ──────────────────────────────────────────────── */}
       <footer className="border-t border-card-border bg-card/30">
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
@@ -693,9 +723,17 @@ export default function Home() {
               AgentAudit
             </div>
             <div className="flex items-center gap-6 text-xs text-muted">
-              <span>Card, Apple Pay, USDC accepted</span>
+              <a href="/privacy" className="transition-colors hover:text-white">Privacy Policy</a>
               <span>|</span>
-              <span>Client-side analysis only</span>
+              <a href="/terms" className="transition-colors hover:text-white">Terms of Service</a>
+              <span>|</span>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event('open-cookie-banner'))}
+                className="transition-colors hover:text-white cursor-pointer"
+              >
+                Cookie Settings
+              </button>
             </div>
           </div>
         </div>

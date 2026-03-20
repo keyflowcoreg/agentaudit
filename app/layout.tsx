@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { JetBrains_Mono } from "next/font/google"
 import { Analytics } from "@/components/Analytics"
+import { CookieBanner } from "@/components/CookieBanner"
 import "./globals.css"
 
 const jetbrains = JetBrains_Mono({
@@ -73,6 +74,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground font-mono">
         <Analytics product="agentaudit" />
         {children}
+        <CookieBanner />
       </body>
     </html>
   )

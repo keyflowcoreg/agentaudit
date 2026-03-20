@@ -7,6 +7,8 @@ import { PayNow } from '@/components/paynow'
 import EmailCapture from '@/components/EmailCapture'
 import { SocialShare } from '@/components/SocialShare'
 import { EcosystemFooter } from '@/components/EcosystemFooter'
+import { SplitText } from '@/components/SplitText'
+import { MagneticButton } from '@/components/MagneticButton'
 
 // ── Example CLAUDE.md for "Try with example" ─────────────────────────
 
@@ -259,15 +261,17 @@ export default function Home() {
             Security Scanner for AI Agent Configs
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="mx-auto mb-6 max-w-4xl text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl"
+            className="mx-auto mb-6 max-w-4xl"
           >
-            Your AI agent has more access than your junior dev.{' '}
-            <span className="text-accent">Have you audited it?</span>
-          </motion.h1>
+            <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+              <SplitText text="Your AI agent has more access than your junior dev." className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight justify-center" />
+              <span className="text-accent">Have you audited it?</span>
+            </h1>
+          </motion.div>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -330,29 +334,31 @@ export default function Home() {
 
             {/* Action buttons */}
             <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                onClick={handleScan}
-                disabled={!config.trim() || scanning}
-                className={`flex-1 rounded-xl py-4 text-sm font-bold text-white transition-all ${
-                  scanning
-                    ? 'bg-accent/60 cursor-wait'
-                    : config.trim()
-                      ? 'bg-accent hover:bg-accent/90 pulse-glow cursor-pointer'
-                      : 'bg-card-border cursor-not-allowed text-muted'
-                }`}
-              >
-                {scanning ? (
-                  <span className="flex items-center justify-center gap-3">
-                    <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Scanning for vulnerabilities...
-                  </span>
-                ) : (
-                  'Scan Now -- Free'
-                )}
-              </button>
+              <MagneticButton className="flex-1">
+                <button
+                  onClick={handleScan}
+                  disabled={!config.trim() || scanning}
+                  className={`w-full rounded-xl py-4 text-sm font-bold text-white transition-all ${
+                    scanning
+                      ? 'bg-accent/60 cursor-wait'
+                      : config.trim()
+                        ? 'bg-accent hover:bg-accent/90 pulse-glow cursor-pointer'
+                        : 'bg-card-border cursor-not-allowed text-muted'
+                  }`}
+                >
+                  {scanning ? (
+                    <span className="flex items-center justify-center gap-3">
+                      <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Scanning for vulnerabilities...
+                    </span>
+                  ) : (
+                    'Scan Now -- Free'
+                  )}
+                </button>
+              </MagneticButton>
               <button
                 onClick={() => {
                   setConfig(EXAMPLE_CONFIG)

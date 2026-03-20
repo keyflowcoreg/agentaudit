@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AgentAudit
+
+Security scanner for AI agent configurations.
+
+[![Live Demo](https://img.shields.io/badge/Live_Demo-agentaudit.vercel.app-blue?style=for-the-badge)](https://agentaudit-five.vercel.app)
+
+[Live Demo](https://agentaudit-five.vercel.app) | [Report Bug](https://github.com/keyflowcoreg/agentaudit/issues)
+
+## Features
+
+- Scan CLAUDE.md, .cursorrules, and MCP configs for security vulnerabilities
+- Client-side analysis -- no config data leaves your browser
+- Risk scoring from A to F with actionable fix recommendations
+- Checks 8 security categories: shell access, file scope, MCP trust, secrets, rate limits, network, tool restrictions, audit logging
+- Full detailed report available via x402 payment
+
+## Tech Stack
+
+Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 · Framer Motion · x402 Payments
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view it locally.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## License
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

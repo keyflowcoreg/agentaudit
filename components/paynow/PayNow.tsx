@@ -217,7 +217,7 @@ export function PayNow({
                           <circle cx="12" cy="12" r="10" />
                           <path d="M12 6v12M15 9.5c-.5-1-1.5-1.5-3-1.5s-3 .5-3 2 1.5 2 3 2 3 .5 3 2-1 2-3 2-2.5-.5-3-1.5" />
                         </svg>
-                        USDC on Base
+                        USDC Payment
                       </span>
                     </button>
                   </div>
@@ -262,10 +262,10 @@ export function PayNow({
                       {status !== 'pending' && status !== 'verifying' ? (
                         <>
                           <p className="text-sm text-zinc-400 text-center">
-                            Send exactly <span className="text-white font-bold">${price} USDC</span> on Base network
+                            Send exactly <span className="text-white font-bold">${price} USDC</span> on any supported network
                           </p>
                           <div className="rounded-xl border border-zinc-700/50 bg-zinc-800/50 p-4 space-y-3">
-                            <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Send to</p>
+                            <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Send to (same address on all networks)</p>
                             <div className="flex items-center gap-2">
                               <code className="flex-1 text-xs text-cyan-400 font-mono break-all select-all bg-zinc-900/50 rounded-lg p-2.5 border border-zinc-700/50">
                                 {WALLET}
@@ -279,7 +279,9 @@ export function PayNow({
                               </button>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                              <span className="text-xs bg-blue-500/15 text-blue-400 px-2.5 py-1 rounded-md font-medium">Base Network</span>
+                              <span className="text-xs bg-blue-500/15 text-blue-400 px-2.5 py-1 rounded-md font-medium">Base</span>
+                              <span className="text-xs bg-purple-500/15 text-purple-400 px-2.5 py-1 rounded-md font-medium">Ethereum</span>
+                              <span className="text-xs bg-violet-500/15 text-violet-400 px-2.5 py-1 rounded-md font-medium">Polygon</span>
                               <span className="text-xs bg-emerald-500/15 text-emerald-400 px-2.5 py-1 rounded-md font-medium">USDC</span>
                             </div>
                           </div>
@@ -287,16 +289,16 @@ export function PayNow({
                           {/* Accepted wallets */}
                           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-zinc-500">
                             <span>Works with:</span>
+                            <span className="text-zinc-300 font-medium">Revolut</span>
+                            <span className="text-zinc-600">·</span>
                             <span className="text-zinc-300 font-medium">Coinbase</span>
                             <span className="text-zinc-600">·</span>
                             <span className="text-zinc-300 font-medium">MetaMask</span>
                             <span className="text-zinc-600">·</span>
-                            <span className="text-zinc-300 font-medium">Rabby</span>
-                            <span className="text-zinc-600">·</span>
                             <span className="text-zinc-300 font-medium">Any USDC wallet</span>
                           </div>
 
-                          {/* Revolut guidance */}
+                          {/* Revolut / app guidance */}
                           <details className="group rounded-xl border border-zinc-700/50 bg-zinc-800/30 overflow-hidden">
                             <summary className="flex items-center gap-2.5 px-4 py-3 cursor-pointer text-sm text-zinc-300 hover:text-white transition-colors select-none">
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="shrink-0">

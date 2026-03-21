@@ -278,11 +278,59 @@ export function PayNow({
                                 {copied ? 'Copied!' : 'Copy'}
                               </button>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
                               <span className="text-xs bg-blue-500/15 text-blue-400 px-2.5 py-1 rounded-md font-medium">Base Network</span>
                               <span className="text-xs bg-emerald-500/15 text-emerald-400 px-2.5 py-1 rounded-md font-medium">USDC</span>
                             </div>
                           </div>
+
+                          {/* Accepted wallets */}
+                          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-zinc-500">
+                            <span>Works with:</span>
+                            <span className="text-zinc-300 font-medium">Coinbase</span>
+                            <span className="text-zinc-600">·</span>
+                            <span className="text-zinc-300 font-medium">MetaMask</span>
+                            <span className="text-zinc-600">·</span>
+                            <span className="text-zinc-300 font-medium">Rabby</span>
+                            <span className="text-zinc-600">·</span>
+                            <span className="text-zinc-300 font-medium">Any USDC wallet</span>
+                          </div>
+
+                          {/* Revolut guidance */}
+                          <details className="group rounded-xl border border-zinc-700/50 bg-zinc-800/30 overflow-hidden">
+                            <summary className="flex items-center gap-2.5 px-4 py-3 cursor-pointer text-sm text-zinc-300 hover:text-white transition-colors select-none">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
+                                <path d="M12 8v4M12 16h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                              </svg>
+                              <span className="font-medium">Have Revolut?</span>
+                              <span className="text-zinc-500 text-xs ml-auto group-open:hidden">See how to pay</span>
+                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="shrink-0 transition-transform group-open:rotate-180">
+                                <path d="M3 4.5l3 3 3-3"/>
+                              </svg>
+                            </summary>
+                            <div className="px-4 pb-4 space-y-3 text-xs text-zinc-400 border-t border-zinc-700/50 pt-3">
+                              <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2 text-amber-400/90">
+                                Revolut does not support Base network. You'll need to bridge or use a different wallet to send USDC on Base.
+                              </div>
+                              <p className="font-medium text-zinc-300">Option A — Use Coinbase Wallet (easiest)</p>
+                              <ol className="list-decimal list-inside space-y-1 text-zinc-400 pl-1">
+                                <li>Buy USDC on Revolut (1:1, no fees up to 500k/month)</li>
+                                <li>Send USDC to your Coinbase Wallet via <span className="text-zinc-300">Ethereum or Polygon</span></li>
+                                <li>Bridge to Base using Coinbase Wallet's built-in bridge</li>
+                                <li>Send to the address above on Base network</li>
+                              </ol>
+                              <p className="font-medium text-zinc-300 pt-1">Option B — Direct from Revolut (advanced)</p>
+                              <ol className="list-decimal list-inside space-y-1 text-zinc-400 pl-1">
+                                <li>Open Revolut → Crypto → USDC → Send</li>
+                                <li>Send USDC to your own MetaMask/Rabby on <span className="text-zinc-300">Ethereum or Polygon</span></li>
+                                <li>Use a bridge (e.g. <a href="https://bridge.base.org" target="_blank" rel="noopener" className="text-cyan-400 hover:underline">bridge.base.org</a>) to move USDC to Base</li>
+                                <li>Send to the address above on Base network</li>
+                              </ol>
+                              <p className="text-zinc-500 pt-1">Revolut supports USDC withdrawal on Ethereum, Polygon, and Solana. Fee: ~3 EUR + network gas.</p>
+                            </div>
+                          </details>
+
                           <button
                             onClick={() => setStatus('pending')}
                             className="w-full rounded-xl border-2 py-3.5 text-sm font-semibold transition-all duration-200 hover:bg-emerald-500/10"

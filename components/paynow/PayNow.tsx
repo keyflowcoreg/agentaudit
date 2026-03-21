@@ -128,16 +128,21 @@ export function PayNow({
   coinbaseCommerceUrl,
   verifyRoute = '/api/verify-payment',
 }: PayNowProps) {
+  const hasStripe = !!(stripeLink || stripeApiRoute)
+  const hasCoinbase = !!coinbaseCommerceUrl
+  const usdcOnly = !hasStripe && !hasCoinbase
+
+  // When USDC-only, start directly on the send screen
+  const initialStep: CheckoutStep = usdcOnly ? 'usdc-send' : 'methods'
+
   const [open, setOpen] = useState(false)
-  const [step, setStep] = useState<CheckoutStep>('methods')
+  const [step, setStep] = useState<CheckoutStep>(initialStep)
   const [direction, setDirection] = useState(1)
   const [loading, setLoading] = useState<LoadingTarget>(null)
   const [copied, setCopied] = useState(false)
   const [txHash, setTxHash] = useState('')
   const [error, setError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
-
-  const hasStripe = !!(stripeLink || stripeApiRoute)
 
   // ---- Stripe success detection (redirect back from hosted checkout) ----
   useEffect(() => {
@@ -176,13 +181,13 @@ export function PayNow({
     // Reset state after close animation finishes
     setTimeout(() => {
       if (step !== 'success') {
-        setStep('methods')
+        setStep(initialStep)
         setTxHash('')
         setError('')
         setLoading(null)
       }
     }, 300)
-  }, [step])
+  }, [step, initialStep])
 
   // ---- Stripe checkout ----
   const handleStripeCheckout = async () => {
@@ -344,7 +349,7 @@ export function PayNow({
 
                   {/* Animated step content */}
                   <AnimatePresence mode="wait" custom={direction}>
-                    {/* ======= STEP: Method Selection ======= */}
+                    {/* ======= STEP: Method Selection (only when Stripe/Coinbase available) ======= */}
                     {step === 'methods' && (
                       <motion.div
                         key="methods"
@@ -401,8 +406,8 @@ export function PayNow({
                             <ChevronRight />
                           </button>
 
-                          {/* -- Coinbase Commerce -- */}
-                          {coinbaseCommerceUrl && (
+                          {/* -- Coinbase Commerce (only if configured) -- */}
+                          {hasCoinbase && (
                             <button
                               onClick={handleCoinbaseCheckout}
                               className="w-full flex items-center gap-4 rounded-xl border border-zinc-800 hover:border-zinc-600 bg-zinc-900/50 hover:bg-zinc-900 p-4 transition-all duration-150 group/card min-h-[72px] text-left"
@@ -432,7 +437,7 @@ export function PayNow({
                             Secure checkout &middot; Instant delivery
                           </div>
                           <div className="flex items-center justify-center gap-1.5 text-xs text-zinc-600">
-                            Powered by Stripe &amp; USDC
+                            {hasStripe ? 'Powered by Stripe & USDC' : 'Powered by USDC'}
                           </div>
                         </div>
                       </motion.div>
@@ -447,22 +452,28 @@ export function PayNow({
                         initial="enter" animate="center" exit="exit"
                         transition={slideTransition}
                       >
-                        <BackButton onClick={() => goTo('methods', -1)} />
+                        {/* Back button only when there are other methods to go back to */}
+                        {!usdcOnly && (
+                          <BackButton onClick={() => goTo('methods', -1)} />
+                        )}
 
-                        <div className="mt-2 mb-5 text-center">
-                          <p className="text-lg font-bold text-white">Send {fmtPrice} USDC</p>
+                        <div className={`${usdcOnly ? '' : 'mt-2 '}mb-5 text-center`}>
+                          <h3 className="text-lg font-bold text-white">Pay with USDC</h3>
+                          <p className="text-sm text-zinc-400 mt-1.5">
+                            Send exactly <span className="font-semibold text-white">{fmtPrice} USDC</span> to this address using any wallet app
+                          </p>
                         </div>
 
                         {/* Wallet address */}
                         <div className="mb-4">
-                          <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-2">To this address</p>
+                          <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-2">Wallet address</p>
                           <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3">
                             <code className="flex-1 text-xs text-cyan-400 font-mono break-all select-all leading-relaxed">
                               {WALLET}
                             </code>
                             <button
                               onClick={handleCopy}
-                              className="shrink-0 text-xs font-semibold rounded-lg px-3 min-h-[36px] min-w-[60px] border transition-all duration-200"
+                              className="shrink-0 text-sm font-semibold rounded-lg px-4 min-h-[40px] min-w-[72px] border transition-all duration-200"
                               style={
                                 copied
                                   ? { borderColor: '#10b981', color: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)' }
@@ -470,8 +481,8 @@ export function PayNow({
                               }
                             >
                               {copied ? (
-                                <span className="flex items-center gap-1">
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                                <span className="flex items-center justify-center gap-1.5">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                                   Copied
                                 </span>
                               ) : 'Copy'}
@@ -487,6 +498,7 @@ export function PayNow({
                             <NetworkBadge name="Ethereum" color="#818cf8" />
                             <NetworkBadge name="Polygon" color="#a78bfa" />
                           </div>
+                          <p className="text-xs text-zinc-600 mt-2">Same address on all networks</p>
                         </div>
 
                         {/* Works with */}
@@ -499,7 +511,7 @@ export function PayNow({
                             <span className="text-zinc-700">&middot;</span>
                             <span className="font-medium">MetaMask</span>
                             <span className="text-zinc-700">&middot;</span>
-                            <span className="text-zinc-400 text-xs">Any USDC wallet</span>
+                            <span className="text-zinc-400 text-xs">any wallet</span>
                           </div>
                         </div>
 
@@ -525,6 +537,19 @@ export function PayNow({
                         >
                           I've sent the payment
                         </button>
+
+                        {/* Trust footer for USDC-only mode */}
+                        {usdcOnly && (
+                          <div className="mt-5 pt-4 border-t border-zinc-800/60">
+                            <div className="flex items-center justify-center gap-1.5 text-xs text-zinc-500">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0110 0v4" />
+                              </svg>
+                              Secure checkout &middot; Instant delivery
+                            </div>
+                          </div>
+                        )}
                       </motion.div>
                     )}
 
